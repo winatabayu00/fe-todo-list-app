@@ -1,5 +1,6 @@
 // src/pages/workspaces/Workspaces.ts
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import debounce from 'lodash/debounce'
 import ApiService from '@/core/services/ApiService'
 import publicEndpoint from '@/constants/publicApi'
 import type { ApiResponse } from '@/core/services/ApiService'
@@ -217,14 +218,19 @@ export function useWorkspaces() {
     }
 
     // Watchers
+    const debouncedFiltersHandler = debounce(() => {
+        currentPage.value = 1
+        fetchWorkspaces()
+    }, 500)
+
     watch(
         [() => filters.value.search, () => filters.value.owner_id, () => filters.value.member_id],
-        () => {
-            currentPage.value = 1
-            fetchWorkspaces()
-        },
-        { debounce: 500 }
+        debouncedFiltersHandler
     )
+
+    onBeforeUnmount(() => {
+        debouncedFiltersHandler.cancel()
+    })
 
     onMounted(() => {
         fetchWorkspaces()

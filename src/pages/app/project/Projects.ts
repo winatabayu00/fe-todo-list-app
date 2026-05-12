@@ -1,5 +1,6 @@
 // src/pages/projects/Projects.ts
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import debounce from 'lodash/debounce'
 import ApiService from '@/core/services/ApiService'
 import publicEndpoint from '@/constants/publicApi'
 import type { ApiResponse } from '@/core/services/ApiService'
@@ -182,14 +183,19 @@ export function useProjects() {
     }
 
     // Watchers
+    const debouncedFiltersHandler = debounce(() => {
+        currentPage.value = 1
+        fetchProjects()
+    }, 500)
+
     watch(
         [() => filters.value.search, () => filters.value.workspace_id, () => filters.value.visibility],
-        () => {
-            currentPage.value = 1
-            fetchProjects()
-        },
-        { debounce: 500 }
+        debouncedFiltersHandler
     )
+
+    onBeforeUnmount(() => {
+        debouncedFiltersHandler.cancel()
+    })
 
     onMounted(() => {
         fetchProjects()

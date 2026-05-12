@@ -1,4 +1,5 @@
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import debounce from 'lodash/debounce'
 import ApiService from '@/core/services/ApiService'
 import publicEndpoint from '@/constants/publicApi'
 import type { ApiResponse } from '@/core/services/ApiService'
@@ -213,14 +214,19 @@ export function useTasks() {
   }
 
   // Watchers
+  const debouncedFiltersHandler = debounce(() => {
+    currentPage.value = 1
+    fetchTasks()
+  }, 500)
+
   watch(
-      [() => filters.value.search, () => filters.value.status, () => filters.value.priority],
-      () => {
-        currentPage.value = 1
-        fetchTasks()
-      },
-      { debounce: 500 } // Gunakan lodash atau implementasi manual
+    [() => filters.value.search, () => filters.value.status, () => filters.value.priority],
+    debouncedFiltersHandler
   )
+
+  onBeforeUnmount(() => {
+    debouncedFiltersHandler.cancel()
+  })
 
   onMounted(() => {
     fetchTasks()
