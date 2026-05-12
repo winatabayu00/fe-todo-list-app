@@ -459,9 +459,13 @@ export function requestSuccess(req: any) {
 }
 
 export function requestFailed(error: any) {
+  const responseData = error.response?.data || error.response || {}
+  const title = responseData.rc || 'Error'
+  const message = responseData.message || error.message || 'An error occurred'
+  
   ElNotification({
-    title: error.response.rc,
-    message: error.response.message,
+    title: title,
+    message: message,
     type: 'error',
     duration: 10000
   })
