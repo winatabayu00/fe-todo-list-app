@@ -1,6 +1,6 @@
 # To-Do Management Frontend
 
-Frontend application for To-Do Management (ClickUp-like) built with **Vue 3**, **Vite**, **Pinia**, **Vue Router**, **Tailwind CSS**, and **Axios**.
+Frontend aplikasi To-Do Management (inspirasi ClickUp) dibangun dengan **Vue 3**, **Vite**, **Pinia**, **Vue Router**, **Tailwind CSS**, dan **Axios**.
 
 ## Features
 
@@ -25,57 +25,72 @@ Frontend application for To-Do Management (ClickUp-like) built with **Vue 3**, *
 - **Lucide Vue Next** – Icon library
 - **TypeScript** – Type safety (optional, but recommended)
 
-## Project Setup
+## Cara instalasi
 
-### Prerequisites
+README ini menjelaskan dua cara menjalankan aplikasi frontend: menggunakan Docker (direkomendasikan untuk konsistensi) dan tanpa Docker (lokal dengan Node).
 
-- Node.js 18+ and yarn or npm
-- Backend Laravel API running (see backend README)
+Catatan: proyek ini mengharapkan backend API (Laravel) berjalan terpisah. Pastikan `VITE_API_BASE_URL` mengarah ke alamat backend Anda.
 
-### Environment Variables
+Persyaratan umum (untuk cara tanpa Docker):
+- Node.js 18+ dan npm atau yarn
 
-Create a `.env` file in the project root (or use existing) and set:
+1) Menggunakan Docker (cepat & konsisten)
+
+- Proyek sudah menyertakan `docker-compose.yml` di root. Docker akan membangun image frontend dan menyajikannya.
+- Langkah:
+
+```bash
+# Pastikan Docker & docker-compose terinstal
+docker compose build
+docker compose up -d
+```
+
+- Setelah container berjalan, frontend biasanya tersedia di http://localhost:5173 (atau port yang didefinisikan di `docker-compose.yml`).
+- Jika perlu mengubah base API dari frontend, set environment di file `.env` yang dipakai oleh docker-compose atau atur variabel `VITE_API_BASE_URL` pada service di `docker-compose.yml`.
+
+2) Tanpa Docker (lokal dengan Node)
+
+- Pastikan Node.js >=18 terpasang.
+- Buat file `.env` di root proyek (jika belum ada) dan set variabel lingkungan minimal:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:8000/api
 VITE_APP_NAME=ToDoManager
 ```
 
-Adjust the URL to match your backend (for example `http://localhost:8000` or a Docker-mapped port).
-
-### Install Dependencies
+- Install dependensi dan jalankan server development:
 
 ```bash
-yarn install
-# or
+# menggunakan npm
 npm install
-```
-
-### Development Server
-
-```bash
-yarn dev
-# or
 npm run dev
+
+# atau menggunakan yarn
+yarn install
+yarn dev
 ```
 
-The app will be available at http://localhost:5173 by default when using Vite.
+- Akses aplikasi di http://localhost:5173 (default Vite). Jika backend berada di host/port berbeda, sesuaikan `VITE_API_BASE_URL`.
 
-### Build for Production
+3) Build produksi
 
 ```bash
-yarn build
-# or
 npm run build
+# hasil build akan berada di folder `dist`
 ```
 
-The production build output will be in the `dist` folder.
+Untuk menjalankan build produksi secara lokal (static), Anda bisa menggunakan paket seperti `serve`:
 
-## API Integration
+```bash
+npm install -g serve
+serve -s dist -l 5173
+```
 
-All API calls are managed through `ApiService` (`src/core/services/ApiService.ts`). Endpoints are centralized in `src/constants/publicApi.ts`. Authentication uses a token stored in a secure cookie via `JwtService`.
+## Integrasi API
 
-Example usage in a component:
+Semua panggilan API dikelola melalui `ApiService` (`src/core/services/ApiService.ts`). Endpoint terpusat di `src/constants/publicApi.ts`. Autentikasi (jika digunakan) memakai token yang disimpan di cookie melalui `JwtService`.
+
+Contoh penggunaan di komponen:
 
 ```ts
 import ApiService from '@/core/services/ApiService'
@@ -84,6 +99,8 @@ import publicEndpoint from '@/constants/publicApi'
 const response = await ApiService.get({ resource: publicEndpoint.dashboard.overallSummary })
 const data = response.payload
 ```
+
+Jika Anda mengubah struktur endpoint, perbarui `src/constants/publicApi.ts` sehingga frontend menggunakan path yang benar.
 
 ## Project Structure
 
@@ -108,7 +125,7 @@ src/
 
 ## Required Backend Endpoints
 
-Make sure the Laravel backend provides the following endpoints (typical implementations):
+Pastikan backend (Laravel) menyediakan endpoint yang sesuai. Contoh endpoint yang biasanya digunakan oleh frontend ini:
 
 ```
 POST /api/auth/login
@@ -123,7 +140,7 @@ GET  /api/dashboard/recent-tasks
 GET  /api/dashboard/my-tasks
 ```
 
-Plus CRUD endpoints for workspaces, projects, tasks, subtasks, tags, and time tracking.
+Selain itu dibutuhkan CRUD untuk workspaces, projects, tasks, subtasks, tags, dan time tracking. Endpoint yang sebenarnya dipakai disimpan di `src/constants/publicApi.ts` — sesuaikan backend Anda dengan file tersebut.
 
 ## Customization
 
@@ -137,4 +154,4 @@ This project is proprietary and confidential. (Adjust as needed.)
 
 ## Support
 
-For issues related to the frontend, please create an issue in the repository.
+Jika menemukan masalah terkait frontend, buka issue di repository dan sertakan log console serta isi `src/constants/publicApi.ts` bila terkait integrasi API.
