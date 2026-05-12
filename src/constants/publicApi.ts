@@ -15,6 +15,7 @@ const publicEndpoint = {
     delete: `${BASE_URL}/app/workspaces/:id/delete`,
     restore: `${BASE_URL}/app/workspaces/:id/restore`,
     members: `${BASE_URL}/app/workspaces/:id/members`,
+    addMember: `${BASE_URL}/app/workspaces/:id/members`,
     memberRemove: `${BASE_URL}/app/workspaces/:id/members/:userId`,
   },
   projects: {
@@ -64,6 +65,18 @@ const publicEndpoint = {
     myTasks: `${BASE_URL}/app/dashboard/my-tasks`,
     workspaceSummary: `${BASE_URL}/app/dashboard/workspace/:workspaceId/summary`,
     overallSummary: `${BASE_URL}/app/dashboard/overall-summary`,
+  },
+  options: {
+    getWorkspace: `${BASE_URL}/get-workspace`,
+    getProjects: `${BASE_URL}/get-projects`,
+    getUsers: `${BASE_URL}/get-users`,
+    getTags: `${BASE_URL}/get-tags`,
+    getTasks: `${BASE_URL}/get-tasks`,
+    getTaskStatuses: `${BASE_URL}/get-task-statuses`,
+    getTaskPriorities: `${BASE_URL}/get-task-priorities`,
+    getProjectVisibilities: `${BASE_URL}/get-project-visibilities`,
+    getTaskLogActions: `${BASE_URL}/get-task-log-actions`,
+    getAllEnums: `${BASE_URL}/get-enums`,
   },
 }
 

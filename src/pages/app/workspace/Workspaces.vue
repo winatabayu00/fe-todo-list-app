@@ -8,10 +8,7 @@
             <h1 class="text-2xl font-bold">Workspaces</h1>
             <p class="text-blue-100 mt-1">Manage all your workspaces</p>
           </div>
-          <button
-              @click="openCreateModal"
-              class="px-4 py-2 bg-white/20 rounded-xl hover:bg-white/30 transition flex items-center gap-2"
-          >
+          <button @click="openCreateModal" class="px-4 py-2 bg-white/20 rounded-xl hover:bg-white/30 transition flex items-center gap-2">
             <Plus class="h-4 w-4" />
             New Workspace
           </button>
@@ -31,10 +28,7 @@
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <button
-            @click="resetFilters"
-            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-        >
+        <button @click="resetFilters" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
           Reset
         </button>
       </div>
@@ -56,16 +50,16 @@
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <button @click="openMembersModal(ws)" class="text-indigo-600 hover:text-indigo-800">
+              <button @click="openMembersModal(ws)" class="text-indigo-600 hover:text-indigo-800" title="Members">
                 <Users class="h-4 w-4" />
               </button>
-              <button @click="openEditModal(ws)" class="text-blue-600 hover:text-blue-800">
+              <button @click="openEditModal(ws)" class="text-blue-600 hover:text-blue-800" title="Edit">
                 <Edit class="h-4 w-4" />
               </button>
-              <button v-if="!ws.deleted_at" @click="deleteWorkspace(ws.id)" class="text-red-600 hover:text-red-800">
+              <button v-if="!ws.deleted_at" @click="deleteWorkspace(ws.id)" class="text-red-600 hover:text-red-800" title="Delete">
                 <Trash2 class="h-4 w-4" />
               </button>
-              <button v-if="ws.deleted_at" @click="restoreWorkspace(ws.id)" class="text-green-600 hover:text-green-800">
+              <button v-if="ws.deleted_at" @click="restoreWorkspace(ws.id)" class="text-green-600 hover:text-green-800" title="Restore">
                 <RefreshCw class="h-4 w-4" />
               </button>
             </div>
@@ -79,20 +73,8 @@
           Showing {{ (currentPage - 1) * perPage + 1 }} to {{ Math.min(currentPage * perPage, total) }} of {{ total }}
         </div>
         <div class="flex gap-2">
-          <button
-              @click="prevPage"
-              :disabled="currentPage === 1"
-              class="px-3 py-1 border rounded-md disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <button
-              @click="nextPage"
-              :disabled="currentPage === lastPage"
-              class="px-3 py-1 border rounded-md disabled:opacity-50"
-          >
-            Next
-          </button>
+          <button @click="prevPage" :disabled="currentPage === 1" class="px-3 py-1 border rounded-md disabled:opacity-50">Previous</button>
+          <button @click="nextPage" :disabled="currentPage === lastPage" class="px-3 py-1 border rounded-md disabled:opacity-50">Next</button>
         </div>
       </div>
     </div>
@@ -104,12 +86,7 @@
         <form @submit.prevent="submitWorkspace">
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-            <input
-                v-model="form.name"
-                type="text"
-                required
-                class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
+            <input v-model="form.name" type="text" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" />
           </div>
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -132,6 +109,7 @@
             <X class="h-5 w-5" />
           </button>
         </div>
+
         <div v-if="membersLoading" class="text-center py-4">Loading members...</div>
         <div v-else>
           <ul class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
@@ -140,24 +118,31 @@
                 <p class="font-medium">{{ member.name }}</p>
                 <p class="text-sm text-gray-500">{{ member.email }}</p>
               </div>
-              <button
-                  @click="removeMember(selectedWorkspace.id, member.id)"
-                  class="text-red-600 hover:text-red-800"
-              >
+              <button @click="removeMember(selectedWorkspace.id, member.id)" class="text-red-600 hover:text-red-800" title="Remove">
                 <UserMinus class="h-4 w-4" />
               </button>
             </li>
             <li v-if="members.length === 0" class="py-4 text-center text-gray-500">No members found.</li>
           </ul>
-          <!-- Add member button (akan diimplementasikan jika backend tersedia) -->
-          <div class="mt-4 pt-4 border-t">
-            <button
-                @click="addMember(selectedWorkspace.id, 'temp')"
-                class="w-full px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Add Member (preview)
-            </button>
-            <p class="text-xs text-gray-400 mt-2">Note: Endpoint for adding member is not yet implemented.</p>
+
+          <!-- Add Member Form -->
+          <div class="mt-4 pt-4 border-t border-gray-200">
+            <div class="flex gap-2">
+              <input
+                  v-model="newMemberId"
+                  type="text"
+                  placeholder="User ID (UUID)"
+                  class="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                  @click="handleAddMember"
+                  :disabled="!newMemberId"
+                  class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add
+              </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Enter a valid user UUID (e.g., from the database).</p>
           </div>
         </div>
       </div>
@@ -184,6 +169,7 @@ const {
   selectedWorkspace,
   members,
   membersLoading,
+  newMemberId,
   formatDate,
   submitWorkspace,
   deleteWorkspace,
@@ -194,13 +180,9 @@ const {
   openMembersModal,
   closeMembersModal,
   removeMember,
+  handleAddMember,
   prevPage,
   nextPage,
   resetFilters
 } = useWorkspaces()
-
-// Dummy add member (backend belum ada)
-const addMember = (workspaceId: string, userId: string) => {
-  alert('Add member feature coming soon. Backend endpoint needed.')
-}
 </script>

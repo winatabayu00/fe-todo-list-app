@@ -42,14 +42,15 @@ export function useWorkspaces() {
     const selectedWorkspace = ref<Workspace | null>(null)
     const members = ref<{ id: string; name: string; email: string }[]>([])
     const membersLoading = ref(false)
+    const newMemberId = ref('')           // untuk input user ID
 
-    // Helper functions
+    // Helpers
     const formatDate = (dateStr?: string) => {
         if (!dateStr) return ''
         return new Date(dateStr).toLocaleDateString()
     }
 
-    // API calls
+    // ==================== API Calls ====================
     async function fetchWorkspaces() {
         loading.value = true
         try {
@@ -93,14 +94,20 @@ export function useWorkspaces() {
     }
 
     async function addMember(workspaceId: string, userId: string) {
+        if (!userId) return
         try {
-            // Jika backend memiliki endpoint POST /workspaces/:id/members, gunakan itu.
-            // Sementara kita asumsikan ada endpoint. Jika tidak, kita bisa menggunakan sync endpoint via update? Tapi lebih baik buat endpoint sendiri.
-            // Karena di backend belum ada route untuk add member, kita akan menggunakan update workspace dengan members field? Tidak, lebih tepat endpoint terpisah.
-            // Untuk sementara, kita lewati dulu fitur add member, karena backend belum menyediakan.
-            console.warn('Add member endpoint not yet implemented in backend. Skipping.')
+            await ApiService.post({
+                resource: publicEndpoint.workspaces.addMember.replace(':id', workspaceId),
+                params: { user_id: userId }
+            })
+            // Refresh member list
+            if (selectedWorkspace.value) {
+                await fetchMembers(selectedWorkspace.value)
+            }
+            newMemberId.value = ''   // clear input
         } catch (error) {
             console.error('Failed to add member', error)
+            alert('Failed to add member. Please check the user ID.')
         }
     }
 
@@ -111,12 +118,12 @@ export function useWorkspaces() {
                     .replace(':id', workspaceId)
                     .replace(':userId', userId)
             })
-            // Refresh members
             if (selectedWorkspace.value) {
                 await fetchMembers(selectedWorkspace.value)
             }
         } catch (error) {
             console.error('Failed to remove member', error)
+            alert('Failed to remove member.')
         }
     }
 
@@ -137,6 +144,7 @@ export function useWorkspaces() {
             await fetchWorkspaces()
         } catch (error) {
             console.error('Failed to save workspace', error)
+            alert('Failed to save workspace.')
         }
     }
 
@@ -163,7 +171,7 @@ export function useWorkspaces() {
         }
     }
 
-    // Modal handlers
+    // ==================== Modal Handlers ====================
     function openCreateModal() {
         editingWorkspace.value = null
         form.value = { name: '', description: '' }
@@ -188,15 +196,22 @@ export function useWorkspaces() {
         selectedWorkspace.value = workspace
         fetchMembers(workspace)
         showMembersModal.value = true
+        newMemberId.value = ''   // reset input
     }
 
     function closeMembersModal() {
         showMembersModal.value = false
         selectedWorkspace.value = null
         members.value = []
+        newMemberId.value = ''
     }
 
-    // Pagination
+    function handleAddMember() {
+        if (!selectedWorkspace.value || !newMemberId.value) return
+        addMember(selectedWorkspace.value.id, newMemberId.value)
+    }
+
+    // ==================== Pagination & Filters ====================
     function prevPage() {
         if (currentPage.value > 1) {
             currentPage.value--
@@ -217,7 +232,7 @@ export function useWorkspaces() {
         fetchWorkspaces()
     }
 
-    // Watchers
+    // ==================== Watchers ====================
     const debouncedFiltersHandler = debounce(() => {
         currentPage.value = 1
         fetchWorkspaces()
@@ -252,6 +267,7 @@ export function useWorkspaces() {
         selectedWorkspace,
         members,
         membersLoading,
+        newMemberId,
         // Helpers
         formatDate,
         // Actions
@@ -265,6 +281,7 @@ export function useWorkspaces() {
         openMembersModal,
         closeMembersModal,
         removeMember,
+        handleAddMember,
         prevPage,
         nextPage,
         resetFilters
