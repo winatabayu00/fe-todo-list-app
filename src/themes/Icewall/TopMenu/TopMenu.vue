@@ -25,26 +25,35 @@ const setFormattedMenu = (
   Object.assign(formattedMenu, computedFormattedMenu);
 };
 const menuStore = useMenuStore();
-const menu = computed(() => nestedMenu(menuStore.menu("top-menu"), route));
+const menu = computed(() => nestedMenu(menuStore.menuValue, route));
 
 provide<ProvideForceActiveMenu>("forceActiveMenu", (pageName: string) => {
   forceActiveMenu(route, pageName);
   setFormattedMenu(menu.value);
 });
 
-watch(menu, () => {
-  setFormattedMenu(menu.value);
-});
+watch(
+  () => menuStore.menuValue,
+  () => {
+    setFormattedMenu(menu.value);
+  },
+  { immediate: true }
+);
 
 watch(
-  computed(() => route.path),
+  () => route.path,
   () => {
     delete route.forceActiveMenu;
   }
 );
 
-onMounted(() => {
-  setFormattedMenu(menu.value);
+onMounted(async () => {
+  try {
+    await menuStore.fetchMenus();
+    setFormattedMenu(menu.value);
+  } catch (err) {
+    console.error("Failed to load menus:", err);
+  }
 });
 </script>
 

@@ -36,17 +36,6 @@ provide<ProvideForceActiveMenu>('forceActiveMenu', (pageName: string) => {
   setFormattedMenu(menu.value)
 })
 
-watch(menu, () => {
-  setFormattedMenu(menu.value)
-})
-
-watch(
-    computed(() => route.path),
-    () => {
-      delete route.forceActiveMenu
-    }
-)
-
 onMounted(async () => {
   try {
     await menuStore.fetchMenus()
@@ -55,6 +44,21 @@ onMounted(async () => {
     console.error('Failed to load menus:', err)
   }
 })
+
+watch(
+  () => menuStore.menuValue,
+  () => {
+    setFormattedMenu(menu.value)
+  },
+  { immediate: true }
+)
+
+watch(
+  () => route.path,
+  () => {
+    delete route.forceActiveMenu
+  }
+)
 
 onBeforeUnmount(() => {
   //

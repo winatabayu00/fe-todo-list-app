@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ThemeSwitcher from '@/components/ThemeSwitcher'
 import Button from '@/components/Base/Button'
 </script>
 
@@ -15,7 +14,6 @@ import Button from '@/components/Base/Button'
     </div>
 
     <div class="relative z-10">
-      <ThemeSwitcher />
       <div class="container px-4 mx-auto">
         <!-- BEGIN: Error Page -->
         <div
