@@ -1,232 +1,254 @@
-// src/pages/projects/Projects.ts
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import debounce from 'lodash/debounce'
 import ApiService from '@/core/services/ApiService'
 import publicEndpoint from '@/constants/publicApi'
 import type { ApiResponse } from '@/core/services/ApiService'
 
+export type ProjectVisibility = 'private' | 'team' | 'public'
+
 export interface Project {
-    id: string
-    name: string
-    description?: string
-    visibility: 'private' | 'team' | 'public'
-    workspace_id: string
-    created_by: string
-    workspace?: { id: string; name: string }
-    creator?: { id: string; name: string }
-    created_at: string
-    updated_at: string
-    deleted_at?: string
+  id: string
+  name: string
+  description?: string
+  visibility: ProjectVisibility
+  workspace_id: string
+  created_by: string
+  workspace?: { id: string; name: string }
+  creator?: { id: string; name: string }
+  created_at: string
+  updated_at: string
+  deleted_at?: string
+}
+
+export interface ProjectFilters {
+  search: string
+  workspace_id: string
+  visibility: string
+}
+
+interface ProjectForm {
+  name: string
+  description: string
+  visibility: ProjectVisibility
+  workspace_id: string
 }
 
 export function useProjects() {
-    const projects = ref<Project[]>([])
-    const loading = ref(false)
-    const currentPage = ref(1)
-    const perPage = ref(10)
-    const total = ref(0)
-    const lastPage = ref(1)
+  // State
+  const projects = ref<Project[]>([])
+  const loading = ref(false)
+  const currentPage = ref(1)
+  const perPage = ref(10)
+  const total = ref(0)
+  const lastPage = ref(1)
+  const filters = ref<ProjectFilters>({ search: '', workspace_id: '', visibility: '' })
+  const workspaces = ref<{ id: string; name: string }[]>([])
 
-    const filters = ref({
-        search: '',
-        workspace_id: '',
-        visibility: ''
-    })
+  const showModal = ref(false)
+  const editingProject = ref<Project | null>(null)
+  const form = ref<ProjectForm>({
+    name: '',
+    description: '',
+    visibility: 'private',
+    workspace_id: ''
+  })
 
-    const showModal = ref(false)
-    const editingProject = ref<Project | null>(null)
-    const form = ref({
-        name: '',
-        description: '',
-        visibility: 'private' as 'private' | 'team' | 'public',
-        workspace_id: ''
-    })
+  // Helpers
+  const formatDate = (dateStr?: string): string => {
+    if (!dateStr) return ''
+    return new Date(dateStr).toLocaleDateString()
+  }
 
-    // Helper functions
-    const formatDate = (dateStr?: string) => {
-        if (!dateStr) return ''
-        return new Date(dateStr).toLocaleDateString()
+  const visibilityBadgeClass = (visibility: ProjectVisibility): string => {
+    const classes: Record<ProjectVisibility, string> = {
+      private: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+      team: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+      public: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
     }
+    return classes[visibility]
+  }
 
-    const visibilityBadgeClass = (visibility: string) => {
-        switch (visibility) {
-            case 'private': return 'bg-gray-100 text-gray-800'
-            case 'team': return 'bg-blue-100 text-blue-800'
-            case 'public': return 'bg-green-100 text-green-800'
-            default: return 'bg-gray-100 text-gray-800'
-        }
+  const visibilityLabel = (visibility: ProjectVisibility): string => {
+    const labels: Record<ProjectVisibility, string> = {
+      private: 'Private',
+      team: 'Team',
+      public: 'Public'
     }
+    return labels[visibility]
+  }
 
-    const visibilityLabel = (visibility: string) => {
-        switch (visibility) {
-            case 'private': return 'Private'
-            case 'team': return 'Team'
-            case 'public': return 'Public'
-            default: return visibility
-        }
+  // API Calls
+  async function fetchProjects() {
+    loading.value = true
+    try {
+      const params: any = {
+        page: currentPage.value,
+        per_page: perPage.value
+      }
+      if (filters.value.search) params.search = filters.value.search
+      if (filters.value.workspace_id) params['filter[workspace_id]'] = filters.value.workspace_id
+      if (filters.value.visibility) params['filter[visibility]'] = filters.value.visibility
+
+      const response = await ApiService.get({
+        resource: publicEndpoint.projects.list,
+        params
+      }) as ApiResponse<{ data: Project[]; current_page: number; last_page: number; total: number }>
+
+      const payload = response.payload
+      projects.value = payload.data || []
+      currentPage.value = payload.current_page
+      lastPage.value = payload.last_page
+      total.value = payload.total
+    } catch (error) {
+      console.error('Failed to fetch projects:', error)
+    } finally {
+      loading.value = false
     }
+  }
 
-    // API calls
-    async function fetchProjects() {
-        loading.value = true
-        try {
-            const params: any = {
-                page: currentPage.value,
-                per_page: perPage.value
-            }
-            if (filters.value.search) params.search = filters.value.search
-            if (filters.value.workspace_id) params['filter[workspace_id]'] = filters.value.workspace_id
-            if (filters.value.visibility) params['filter[visibility]'] = filters.value.visibility
-
-            const response = await ApiService.get({
-                resource: publicEndpoint.projects.list,
-                params
-            }) as ApiResponse<{ data: Project[]; current_page: number; last_page: number; total: number }>
-
-            const payload = response.payload
-            projects.value = payload.data || []
-            currentPage.value = payload.current_page
-            lastPage.value = payload.last_page
-            total.value = payload.total
-        } catch (error) {
-            console.error('Failed to fetch projects', error)
-        } finally {
-            loading.value = false
-        }
+  async function fetchWorkspaces() {
+    try {
+      const response = await ApiService.get({
+        resource: publicEndpoint.workspaces.list
+      }) as ApiResponse<{ data: { id: string; name: string }[] }>
+      workspaces.value = response.payload.data || []
+    } catch (error) {
+      console.error('Failed to fetch workspaces:', error)
     }
+  }
 
-    async function submitProject() {
-        try {
-            if (editingProject.value) {
-                await ApiService.put({
-                    resource: publicEndpoint.projects.update.replace(':id', editingProject.value.id),
-                    params: form.value
-                })
-            } else {
-                await ApiService.post({
-                    resource: publicEndpoint.projects.create,
-                    params: form.value
-                })
-            }
-            closeModal()
-            await fetchProjects()
-        } catch (error) {
-            console.error('Failed to save project', error)
-        }
+  async function submitProject() {
+    try {
+      if (editingProject.value) {
+        await ApiService.put({
+          resource: publicEndpoint.projects.update.replace(':id', editingProject.value.id),
+          params: form.value
+        })
+      } else {
+        await ApiService.post({
+          resource: publicEndpoint.projects.create,
+          params: form.value
+        })
+      }
+      closeModal()
+      await fetchProjects()
+    } catch (error) {
+      console.error('Failed to save project:', error)
+      alert('Failed to save project.')
     }
+  }
 
-    async function deleteProject(id: string) {
-        if (!confirm('Are you sure you want to delete this project?')) return
-        try {
-            await ApiService.delete({
-                resource: publicEndpoint.projects.delete.replace(':id', id)
-            })
-            await fetchProjects()
-        } catch (error) {
-            console.error('Failed to delete project', error)
-        }
+  async function deleteProject(id: string) {
+    if (!confirm('Are you sure you want to delete this project?')) return
+    try {
+      await ApiService.delete({
+        resource: publicEndpoint.projects.delete.replace(':id', id)
+      })
+      await fetchProjects()
+    } catch (error) {
+      console.error('Failed to delete project:', error)
     }
+  }
 
-    async function restoreProject(id: string) {
-        try {
-            await ApiService.patch({
-                resource: publicEndpoint.projects.restore.replace(':id', id)
-            })
-            await fetchProjects()
-        } catch (error) {
-            console.error('Failed to restore project', error)
-        }
+  async function restoreProject(id: string) {
+    try {
+      await ApiService.patch({
+        resource: publicEndpoint.projects.restore.replace(':id', id)
+      })
+      await fetchProjects()
+    } catch (error) {
+      console.error('Failed to restore project:', error)
     }
+  }
 
-    // Modal handlers
-    function openCreateModal() {
-        editingProject.value = null
-        form.value = { name: '', description: '', visibility: 'private', workspace_id: '' }
-        showModal.value = true
+  // Modal Handlers
+  function openCreateModal() {
+    editingProject.value = null
+    form.value = { name: '', description: '', visibility: 'private', workspace_id: '' }
+    showModal.value = true
+  }
+
+  function openEditModal(project: Project) {
+    editingProject.value = project
+    form.value = {
+      name: project.name,
+      description: project.description || '',
+      visibility: project.visibility,
+      workspace_id: project.workspace_id
     }
+    showModal.value = true
+  }
 
-    function openEditModal(project: Project) {
-        editingProject.value = project
-        form.value = {
-            name: project.name,
-            description: project.description || '',
-            visibility: project.visibility,
-            workspace_id: project.workspace_id
-        }
-        showModal.value = true
+  function closeModal() {
+    showModal.value = false
+    editingProject.value = null
+  }
+
+  // Pagination & Filters
+  function prevPage() {
+    if (currentPage.value > 1) {
+      currentPage.value--
+      fetchProjects()
     }
+  }
 
-    function closeModal() {
-        showModal.value = false
-        editingProject.value = null
+  function nextPage() {
+    if (currentPage.value < lastPage.value) {
+      currentPage.value++
+      fetchProjects()
     }
+  }
 
-    // Pagination
-    function prevPage() {
-        if (currentPage.value > 1) {
-            currentPage.value--
-            fetchProjects()
-        }
-    }
+  function resetFilters() {
+    filters.value = { search: '', workspace_id: '', visibility: '' }
+    currentPage.value = 1
+    fetchProjects()
+  }
 
-    function nextPage() {
-        if (currentPage.value < lastPage.value) {
-            currentPage.value++
-            fetchProjects()
-        }
-    }
+  // Watchers & Lifecycle
+  const debouncedFiltersHandler = debounce(() => {
+    currentPage.value = 1
+    fetchProjects()
+  }, 500)
 
-    function resetFilters() {
-        filters.value = { search: '', workspace_id: '', visibility: '' }
-        currentPage.value = 1
-        fetchProjects()
-    }
+  watch(
+    [() => filters.value.search, () => filters.value.workspace_id, () => filters.value.visibility],
+    debouncedFiltersHandler
+  )
 
-    // Watchers
-    const debouncedFiltersHandler = debounce(() => {
-        currentPage.value = 1
-        fetchProjects()
-    }, 500)
+  onBeforeUnmount(() => {
+    debouncedFiltersHandler.cancel()
+  })
 
-    watch(
-        [() => filters.value.search, () => filters.value.workspace_id, () => filters.value.visibility],
-        debouncedFiltersHandler
-    )
+  onMounted(() => {
+    fetchWorkspaces()
+    fetchProjects()
+  })
 
-    onBeforeUnmount(() => {
-        debouncedFiltersHandler.cancel()
-    })
-
-    onMounted(() => {
-        fetchProjects()
-    })
-
-    return {
-        // State
-        projects,
-        loading,
-        currentPage,
-        perPage,
-        total,
-        lastPage,
-        filters,
-        showModal,
-        editingProject,
-        form,
-        // Helpers
-        formatDate,
-        visibilityBadgeClass,
-        visibilityLabel,
-        // Actions
-        fetchProjects,
-        submitProject,
-        deleteProject,
-        restoreProject,
-        openCreateModal,
-        openEditModal,
-        closeModal,
-        prevPage,
-        nextPage,
-        resetFilters
-    }
+  return {
+    projects,
+    loading,
+    currentPage,
+    perPage,
+    total,
+    lastPage,
+    filters,
+    showModal,
+    editingProject,
+    form,
+    workspaces,
+    formatDate,
+    visibilityBadgeClass,
+    visibilityLabel,
+    fetchProjects,
+    submitProject,
+    deleteProject,
+    restoreProject,
+    openCreateModal,
+    openEditModal,
+    closeModal,
+    prevPage,
+    nextPage,
+    resetFilters
+  }
 }

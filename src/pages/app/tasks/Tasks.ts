@@ -4,35 +4,49 @@ import ApiService from '@/core/services/ApiService'
 import publicEndpoint from '@/constants/publicApi'
 import type { ApiResponse } from '@/core/services/ApiService'
 
+export type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'done'
+export type TaskPriority = 'urgent' | 'high' | 'normal' | 'low'
+
 export interface Task {
   id: string
   title: string
   description?: string
-  status: string
-  priority: string
+  status: TaskStatus
+  priority: TaskPriority
   due_date?: string
   is_completed: boolean
   assignee?: { id: string; name: string }
   project?: { id: string; name: string }
 }
 
+export interface TaskFilters {
+  search: string
+  status: string
+  priority: string
+}
+
+interface TaskForm {
+  title: string
+  description: string
+  status: TaskStatus
+  priority: TaskPriority
+  due_date: string
+  project_id: string
+}
+
 export function useTasks() {
+  // State
   const tasks = ref<Task[]>([])
   const loading = ref(false)
   const currentPage = ref(1)
   const perPage = ref(10)
   const total = ref(0)
   const lastPage = ref(1)
-
-  const filters = ref({
-    search: '',
-    status: '',
-    priority: ''
-  })
+  const filters = ref<TaskFilters>({ search: '', status: '', priority: '' })
 
   const showModal = ref(false)
   const editingTask = ref<Task | null>(null)
-  const form = ref({
+  const form = ref<TaskForm>({
     title: '',
     description: '',
     status: 'todo',
@@ -41,9 +55,9 @@ export function useTasks() {
     project_id: ''
   })
 
-  // Helper functions
-  const formatStatus = (status: string) => {
-    const map: Record<string, string> = {
+  // Helpers
+  const formatStatus = (status: TaskStatus): string => {
+    const map: Record<TaskStatus, string> = {
       todo: 'Todo',
       in_progress: 'In Progress',
       in_review: 'In Review',
@@ -52,8 +66,8 @@ export function useTasks() {
     return map[status] || status
   }
 
-  const formatPriority = (priority: string) => {
-    const map: Record<string, string> = {
+  const formatPriority = (priority: TaskPriority): string => {
+    const map: Record<TaskPriority, string> = {
       urgent: 'Urgent',
       high: 'High',
       normal: 'Normal',
@@ -62,29 +76,29 @@ export function useTasks() {
     return map[priority] || priority
   }
 
-  const formatDate = (dateStr?: string) => {
+  const formatDate = (dateStr?: string): string => {
     if (!dateStr) return ''
     return new Date(dateStr).toLocaleDateString()
   }
 
-  const statusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'todo': return 'bg-gray-100 text-gray-800'
-      case 'in_progress': return 'bg-yellow-100 text-yellow-800'
-      case 'in_review': return 'bg-blue-100 text-blue-800'
-      case 'done': return 'bg-green-100 text-green-800'
-      default: return 'bg-gray-100 text-gray-800'
+  const statusBadgeClass = (status: TaskStatus): string => {
+    const classes: Record<TaskStatus, string> = {
+      todo: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+      in_progress: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+      in_review: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+      done: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
     }
+    return classes[status]
   }
 
-  const priorityBadgeClass = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'bg-red-100 text-red-800'
-      case 'high': return 'bg-orange-100 text-orange-800'
-      case 'normal': return 'bg-blue-100 text-blue-800'
-      case 'low': return 'bg-green-100 text-green-800'
-      default: return 'bg-gray-100 text-gray-800'
+  const priorityBadgeClass = (priority: TaskPriority): string => {
+    const classes: Record<TaskPriority, string> = {
+      urgent: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+      high: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+      normal: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+      low: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
     }
+    return classes[priority]
   }
 
   // API Calls
@@ -110,7 +124,7 @@ export function useTasks() {
       lastPage.value = payload.last_page
       total.value = payload.total
     } catch (error) {
-      console.error('Failed to fetch tasks', error)
+      console.error('Failed to fetch tasks:', error)
     } finally {
       loading.value = false
     }
@@ -124,7 +138,7 @@ export function useTasks() {
       })
       task.is_completed = !task.is_completed
     } catch (error) {
-      console.error('Failed to update task', error)
+      console.error('Failed to update task:', error)
     }
   }
 
@@ -136,7 +150,7 @@ export function useTasks() {
       })
       await fetchTasks()
     } catch (error) {
-      console.error('Failed to delete task', error)
+      console.error('Failed to delete task:', error)
     }
   }
 
@@ -156,11 +170,12 @@ export function useTasks() {
       closeModal()
       await fetchTasks()
     } catch (error) {
-      console.error('Failed to save task', error)
+      console.error('Failed to save task:', error)
+      alert('Failed to save task.')
     }
   }
 
-  // Modal handlers
+  // Modal Handlers
   function openCreateModal() {
     editingTask.value = null
     form.value = {
@@ -192,7 +207,7 @@ export function useTasks() {
     editingTask.value = null
   }
 
-  // Pagination
+  // Pagination & Filters
   function prevPage() {
     if (currentPage.value > 1) {
       currentPage.value--
@@ -213,7 +228,7 @@ export function useTasks() {
     fetchTasks()
   }
 
-  // Watchers
+  // Watchers & Lifecycle
   const debouncedFiltersHandler = debounce(() => {
     currentPage.value = 1
     fetchTasks()
@@ -233,7 +248,6 @@ export function useTasks() {
   })
 
   return {
-    // State
     tasks,
     loading,
     currentPage,
@@ -244,13 +258,11 @@ export function useTasks() {
     showModal,
     editingTask,
     form,
-    // Helpers
     formatStatus,
     formatPriority,
     formatDate,
     statusBadgeClass,
     priorityBadgeClass,
-    // Actions
     toggleComplete,
     deleteTask,
     submitTask,

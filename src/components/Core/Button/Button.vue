@@ -1,4 +1,3 @@
-<!-- @/components/Button/Button.vue -->
 <template>
   <button
     :type="type"
