@@ -14,7 +14,7 @@
               </div>
               <div>
                 <h1 class="text-2xl font-bold">Profile Settings</h1>
-                <p class="text-blue-100 mt-1">Manage your account and trading preferences</p>
+                <p class="text-blue-100 mt-1">Manage your account and task management preferences</p>
               </div>
             </div>
           </div>
@@ -45,8 +45,8 @@
                   {{ userInitials }}
                 </div>
                 <button
-                  @click="editAvatar"
-                  class="absolute bottom-2 right-2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
+                    @click="editAvatar"
+                    class="absolute bottom-2 right-2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
                 >
                   <Camera class="h-4 w-4 text-gray-600" />
                 </button>
@@ -66,37 +66,37 @@
               <div class="mt-4 flex items-center justify-center gap-2">
                 <div class="flex items-center gap-1 text-sm text-green-600">
                   <BadgeCheck class="h-4 w-4" />
-                  <span>Verified Trader</span>
+                  <span>Verified User</span>
                 </div>
               </div>
 
               <!-- Stats -->
               <div class="mt-6 grid grid-cols-3 gap-4">
                 <div class="text-center">
-                  <div class="text-lg font-bold text-gray-900">{{ userStats.tradingDays }}</div>
-                  <div class="text-xs text-gray-500">Trading Days</div>
+                  <div class="text-lg font-bold text-gray-900">{{ userStats.projectsCount }}</div>
+                  <div class="text-xs text-gray-500">Projects</div>
                 </div>
                 <div class="text-center">
-                  <div class="text-lg font-bold text-gray-900">{{ userStats.followers }}</div>
-                  <div class="text-xs text-gray-500">Followers</div>
+                  <div class="text-lg font-bold text-gray-900">{{ userStats.tasksCount }}</div>
+                  <div class="text-xs text-gray-500">Tasks</div>
                 </div>
                 <div class="text-center">
-                  <div class="text-lg font-bold text-gray-900">{{ userStats.following }}</div>
-                  <div class="text-xs text-gray-500">Following</div>
+                  <div class="text-lg font-bold text-gray-900">{{ userStats.workspacesCount }}</div>
+                  <div class="text-xs text-gray-500">Workspaces</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Trading Stats -->
+          <!-- Task Statistics -->
           <div class="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
             <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <BarChart3 class="h-5 w-5 text-blue-600" />
-              Trading Statistics
+              Task Statistics
             </h3>
 
             <div class="space-y-4">
-              <div v-for="stat in tradingStats" :key="stat.label" class="flex items-center justify-between">
+              <div v-for="stat in taskStats" :key="stat.label" class="flex items-center justify-between">
                 <span class="text-sm text-gray-600">{{ stat.label }}</span>
                 <span :class="['text-sm font-semibold', stat.color]">{{ stat.value }}</span>
               </div>
@@ -104,15 +104,15 @@
 
             <div class="mt-6 pt-4 border-t border-gray-200">
               <div class="flex items-center justify-between text-sm">
-                <span class="text-gray-600">Performance Score</span>
+                <span class="text-gray-600">Completion Rate</span>
                 <div class="flex items-center gap-2">
                   <div class="w-16 bg-gray-200 rounded-full h-2">
                     <div
-                      class="bg-gradient-to-r from-green-500 to-emerald-600 h-2 rounded-full transition-all duration-1000"
-                      :style="{ width: `${performanceScore}%` }"
+                        class="bg-gradient-to-r from-green-500 to-emerald-600 h-2 rounded-full transition-all duration-1000"
+                        :style="{ width: `${completionRate}%` }"
                     ></div>
                   </div>
-                  <span class="font-semibold text-gray-900">{{ performanceScore }}/100</span>
+                  <span class="font-semibold text-gray-900">{{ completionRate }}%</span>
                 </div>
               </div>
             </div>
@@ -156,8 +156,8 @@
                 Personal Information
               </h3>
               <button
-                @click="editPersonalInfo"
-                class="px-4 py-2 text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-2"
+                  @click="editPersonalInfo"
+                  class="px-4 py-2 text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-2"
               >
                 <Edit class="h-4 w-4" />
                 Edit
@@ -198,16 +198,16 @@
             </div>
           </div>
 
-          <!-- Trading Preferences -->
+          <!-- Task Management Preferences -->
           <div class="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
             <div class="flex items-center justify-between mb-6">
               <h3 class="font-semibold text-gray-800 flex items-center gap-2 text-lg">
                 <Settings class="h-5 w-5 text-orange-600" />
-                Trading Preferences
+                Task Preferences
               </h3>
               <button
-                @click="editTradingPreferences"
-                class="px-4 py-2 text-orange-600 hover:text-orange-800 transition-colors flex items-center gap-2"
+                  @click="editPreferences"
+                  class="px-4 py-2 text-orange-600 hover:text-orange-800 transition-colors flex items-center gap-2"
               >
                 <Edit class="h-4 w-4" />
                 Edit
@@ -216,44 +216,44 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Preferred Trading Style</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Default Task View</label>
                 <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <span class="text-gray-900">{{ tradingPreferences.style }}</span>
+                  <span class="text-gray-900">{{ preferences.defaultView }}</span>
                 </div>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Risk Tolerance</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Default Priority</label>
                 <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <span class="text-gray-900">{{ tradingPreferences.riskTolerance }}</span>
+                  <span class="text-gray-900">{{ preferences.defaultPriority }}</span>
                 </div>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Favorite Pairs</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Favorite Tags</label>
                 <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div class="flex flex-wrap gap-1">
                     <span
-                      v-for="pair in tradingPreferences.favoritePairs"
-                      :key="pair"
-                      class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                        v-for="tag in preferences.favoriteTags"
+                        :key="tag"
+                        class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
                     >
-                      {{ pair }}
+                      {{ tag }}
                     </span>
                   </div>
                 </div>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Trading Hours</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Working Hours</label>
                 <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <span class="text-gray-900">{{ tradingPreferences.tradingHours }}</span>
+                  <span class="text-gray-900">{{ preferences.workingHours }}</span>
                 </div>
               </div>
               <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Notifications</label>
                 <div class="space-y-2">
                   <div
-                    v-for="notification in tradingPreferences.notifications"
-                    :key="notification.type"
-                    class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                      v-for="notification in preferences.notifications"
+                      :key="notification.type"
+                      class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
                   >
                     <div>
                       <div class="font-medium text-gray-900">{{ notification.type }}</div>
@@ -261,14 +261,14 @@
                     </div>
                     <div class="flex items-center">
                       <button
-                        @click="toggleNotification(notification.type)"
-                        :class="[
+                          @click="toggleNotification(notification.type)"
+                          :class="[
                           'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
                           notification.enabled ? 'bg-green-500' : 'bg-gray-200'
                         ]"
                       >
                         <span
-                          :class="[
+                            :class="[
                             'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
                             notification.enabled ? 'translate-x-5' : 'translate-x-0'
                           ]"
@@ -295,8 +295,8 @@
                   <div class="text-sm text-gray-500 mt-1">Add an extra layer of security to your account</div>
                 </div>
                 <button
-                  @click="toggleTwoFactor"
-                  :class="[
+                    @click="toggleTwoFactor"
+                    :class="[
                     'px-4 py-2 rounded-lg font-medium transition-colors',
                     securitySettings.twoFactorEnabled
                       ? 'bg-green-100 text-green-700 hover:bg-green-200'
@@ -313,8 +313,8 @@
                   <div class="text-sm text-gray-500 mt-1">Last changed {{ securitySettings.lastPasswordChange }}</div>
                 </div>
                 <button
-                  @click="changePassword"
-                  class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    @click="changePassword"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
                   Change
                 </button>
@@ -326,8 +326,8 @@
                   <div class="text-sm text-gray-500 mt-1">Recent account access</div>
                 </div>
                 <button
-                  @click="viewLoginActivity"
-                  class="px-4 py-2 text-blue-600 hover:text-blue-800 transition-colors font-medium flex items-center gap-2"
+                    @click="viewLoginActivity"
+                    class="px-4 py-2 text-blue-600 hover:text-blue-800 transition-colors font-medium flex items-center gap-2"
                 >
                   View
                   <ArrowRight class="h-4 w-4" />
@@ -340,8 +340,8 @@
                   <div class="text-sm text-gray-500 mt-1">{{ securitySettings.connectedDevices }} devices</div>
                 </div>
                 <button
-                  @click="manageDevices"
-                  class="px-4 py-2 text-blue-600 hover:text-blue-800 transition-colors font-medium"
+                    @click="manageDevices"
+                    class="px-4 py-2 text-blue-600 hover:text-blue-800 transition-colors font-medium"
                 >
                   Manage
                 </button>
@@ -349,12 +349,12 @@
             </div>
           </div>
 
-          <!-- Billing & Subscription -->
+          <!-- Subscription & Billing -->
           <div class="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
             <div class="flex items-center justify-between mb-6">
               <h3 class="font-semibold text-gray-800 flex items-center gap-2 text-lg">
                 <CreditCard class="h-5 w-5 text-purple-600" />
-                Billing & Subscription
+                Subscription & Billing
               </h3>
               <button class="px-4 py-2 text-purple-600 hover:text-purple-800 transition-colors flex items-center gap-2">
                 <Plus class="h-4 w-4" />
@@ -410,8 +410,8 @@
                   <div class="text-sm text-red-700 mt-1">Permanently delete your account and all data</div>
                 </div>
                 <button
-                  @click="deleteAccount"
-                  class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                    @click="deleteAccount"
+                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
                 >
                   Delete
                 </button>
@@ -420,11 +420,11 @@
               <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-lg border border-yellow-200">
                 <div>
                   <div class="font-medium text-yellow-900">Export Data</div>
-                  <div class="text-sm text-yellow-700 mt-1">Download all your trading data</div>
+                  <div class="text-sm text-yellow-700 mt-1">Download all your task and workspace data</div>
                 </div>
                 <button
-                  @click="exportData"
-                  class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-medium"
+                    @click="exportData"
+                    class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-medium"
                 >
                   Export
                 </button>
@@ -454,7 +454,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import {
   User,
   Camera,
@@ -468,98 +468,100 @@ import {
   CreditCard,
   Plus,
   AlertTriangle,
-  Bell,
-  Mail,
-  MessageSquare
 } from 'lucide-vue-next'
 import router from '@/router'
 
-// Reactive data
+// Modal
 const showEditModal = ref(false)
 
-// User profile data
+// User profile data (disesuaikan dengan To-Do Management)
 const userProfile = ref({
-  fullName: 'John Trader',
-  username: 'johntrader',
-  email: 'john.trader@example.com',
-  phone: '+1 (555) 123-4567',
-  title: 'Professional Forex Trader',
-  bio: 'Passionate about technical analysis and risk management. Trading since 2018 with focus on EUR/USD and Gold.',
-  joinDate: 'March 2018'
+  fullName: 'Admin User',
+  username: 'admin',
+  email: 'admin@example.com',
+  phone: '+62 812 3456 7890',
+  title: 'Project Manager',
+  bio: 'Experienced in managing tasks, projects, and teams. Focus on productivity and agile workflows.',
+  joinDate: 'January 2025'
 })
 
+// User stats (proyek, tugas, workspace)
 const userStats = ref({
-  tradingDays: 245,
-  followers: 128,
-  following: 56
+  projectsCount: 12,
+  tasksCount: 156,
+  workspacesCount: 3
 })
 
-const tradingStats = ref([
-  { label: 'Total Trades', value: '1,245', color: 'text-gray-900' },
-  { label: 'Win Rate', value: '68%', color: 'text-green-600' },
-  { label: 'Avg. R:R Ratio', value: '1.8:1', color: 'text-blue-600' },
-  { label: 'Profit Factor', value: '2.1', color: 'text-purple-600' },
-  { label: 'Max Drawdown', value: '12.5%', color: 'text-red-600' },
-  { label: 'Sharpe Ratio', value: '1.85', color: 'text-indigo-600' }
+// Task statistics
+const taskStats = ref([
+  { label: 'Completed Tasks', value: '98', color: 'text-green-600' },
+  { label: 'In Progress', value: '34', color: 'text-yellow-600' },
+  { label: 'Overdue', value: '5', color: 'text-red-600' },
+  { label: 'Total Time Spent', value: '127 hrs', color: 'text-blue-600' },
+  { label: 'Avg. Completion', value: '6.2 days', color: 'text-purple-600' },
+  { label: 'Tasks on Schedule', value: '87%', color: 'text-indigo-600' }
 ])
 
+// Account status
 const accountStatus = ref({
-  level: 'Professional',
+  level: 'Premium',
   verification: 'Verified',
-  memberSince: 'Mar 2018'
+  memberSince: 'Jan 2025'
 })
 
-const tradingPreferences = ref({
-  style: 'Swing Trading',
-  riskTolerance: 'Medium',
-  favoritePairs: ['EURUSD', 'XAUUSD', 'GBPUSD', 'USDJPY'],
-  tradingHours: '08:00 - 16:00 (GMT)',
+// Task preferences (bukan trading)
+const preferences = ref({
+  defaultView: 'Kanban Board',
+  defaultPriority: 'Medium',
+  favoriteTags: ['urgent', 'feature', 'bug', 'documentation'],
+  workingHours: '09:00 - 17:00 (GMT+7)',
   notifications: [
-    { type: 'Email Alerts', description: 'Trade signals and market updates', enabled: true },
-    { type: 'Push Notifications', description: 'Price alerts and order updates', enabled: true },
-    { type: 'SMS Alerts', description: 'Critical account notifications', enabled: false },
-    { type: 'Weekly Reports', description: 'Performance summaries', enabled: true }
+    { type: 'Email Alerts', description: 'Task assignments and mentions', enabled: true },
+    { type: 'Push Notifications', description: 'Due date reminders', enabled: true },
+    { type: 'SMS Alerts', description: 'Critical updates', enabled: false },
+    { type: 'Weekly Report', description: 'Task summary', enabled: true }
   ]
 })
 
+// Security settings
 const securitySettings = ref({
-  twoFactorEnabled: true,
+  twoFactorEnabled: false,
   lastPasswordChange: '2 weeks ago',
-  connectedDevices: 3
+  connectedDevices: 2
 })
 
+// Subscription
 const subscriptionPlan = ref({
   name: 'Professional Plan',
-  description: 'Advanced analytics and premium features',
-  price: '$49.99'
+  description: 'Unlimited tasks, workspaces, and advanced reporting',
+  price: '$29.99'
 })
 
 const billingInfo = ref({
-  remainingDays: 15,
-  nextBilling: 'Dec 15, 2024'
+  remainingDays: 18,
+  nextBilling: 'Jun 15, 2025'
 })
 
-// Computed properties
+// Computed
 const userInitials = computed(() => {
   return userProfile.value.fullName
-    .split(' ')
-    .map(name => name[0])
-    .join('')
-    .toUpperCase()
+      .split(' ')
+      .map(name => name[0])
+      .join('')
+      .toUpperCase()
 })
 
-const joinDate = computed(() => {
-  return userProfile.value.joinDate
-})
+const joinDate = computed(() => userProfile.value.joinDate)
 
-const performanceScore = computed(() => {
-  return 84 // This would be calculated based on various metrics
+const completionRate = computed(() => {
+  const total = userStats.value.tasksCount
+  const completed = parseInt(taskStats.value.find(s => s.label === 'Completed Tasks')?.value || '0')
+  return total > 0 ? Math.round((completed / total) * 100) : 0
 })
 
 // Methods
 const editAvatar = () => {
   console.log('Editing avatar...')
-  // Implement avatar editing logic
 }
 
 const editPersonalInfo = () => {
@@ -569,19 +571,15 @@ const editPersonalInfo = () => {
 const savePersonalInfo = () => {
   console.log('Saving personal info...')
   showEditModal.value = false
-  // Implement save logic
 }
 
-const editTradingPreferences = () => {
-  console.log('Editing trading preferences...')
-  // Implement trading preferences editing
+const editPreferences = () => {
+  console.log('Editing preferences...')
 }
 
 const toggleNotification = (type: string) => {
-  const notification = tradingPreferences.value.notifications.find(n => n.type === type)
-  if (notification) {
-    notification.enabled = !notification.enabled
-  }
+  const notification = preferences.value.notifications.find(n => n.type === type)
+  if (notification) notification.enabled = !notification.enabled
 }
 
 const toggleTwoFactor = () => {
@@ -589,34 +587,24 @@ const toggleTwoFactor = () => {
 }
 
 const changePassword = () => {
-  router.push({ path: '/user/change-password' });
-  // Implement password change logic
+  router.push({ name: 'change-password' })
 }
 
 const viewLoginActivity = () => {
   console.log('Viewing login activity...')
-  // Implement login activity view
 }
 
 const manageDevices = () => {
   console.log('Managing devices...')
-  // Implement device management
 }
 
 const deleteAccount = () => {
   if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
     console.log('Deleting account...')
-    // Implement account deletion
   }
 }
 
 const exportData = () => {
   console.log('Exporting data...')
-  // Implement data export
 }
-
-// Lifecycle
-onMounted(() => {
-  // Initial data loading if needed
-})
 </script>

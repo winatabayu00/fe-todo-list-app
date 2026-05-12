@@ -215,60 +215,6 @@
         </form>
       </div>
 
-      <!-- Two-Factor Authentication Section -->
-      <div class="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 mt-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-lg font-bold text-gray-900 mb-1">Two-Factor Authentication</h3>
-            <p class="text-gray-600">Add an extra layer of security to your account</p>
-          </div>
-          <div class="flex items-center gap-4">
-            <span
-              class="px-3 py-1 rounded-full text-sm font-medium"
-              :class="twoFactorEnabled ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
-            >
-              {{ twoFactorEnabled ? 'Enabled' : 'Disabled' }}
-            </span>
-            <button
-              @click="toggleTwoFactor"
-              class="px-4 py-2 rounded-xl font-medium transition-colors"
-              :class="twoFactorEnabled ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200'"
-            >
-              {{ twoFactorEnabled ? 'Disable' : 'Enable' }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recent Security Activity -->
-      <div class="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 mt-6">
-        <h3 class="text-lg font-bold text-gray-900 mb-4">Recent Security Activity</h3>
-
-        <div class="space-y-4">
-          <div
-            v-for="activity in securityActivities"
-            :key="activity.id"
-            class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200"
-          >
-            <div class="p-2 bg-blue-100 rounded-lg">
-              <component :is="activity.icon" class="h-5 w-5 text-blue-600" />
-            </div>
-            <div class="flex-1">
-              <p class="font-medium text-gray-900">{{ activity.description }}</p>
-              <p class="text-sm text-gray-500">{{ activity.time }}</p>
-            </div>
-            <div class="text-right">
-              <p class="text-sm font-medium" :class="activity.statusColor">{{ activity.status }}</p>
-              <p class="text-xs text-gray-500">{{ activity.location }}</p>
-            </div>
-          </div>
-        </div>
-
-        <button class="w-full mt-4 px-4 py-2 text-blue-600 hover:text-blue-800 transition-colors font-medium flex items-center justify-center gap-2">
-          View All Activity
-          <ArrowRight class="h-4 w-4" />
-        </button>
-      </div>
     </div>
   </div>
 </template>
