@@ -24,7 +24,7 @@
 
     <!-- Workspace Grid -->
     <div>
-      <LoadingIcon v-if="loading" class="mx-auto" />
+      <LoadingIcon v-if="loading" icon="puff" class="mx-auto" />
       <div v-else-if="workspaces.length === 0" class="text-center py-16">
         <div class="mx-auto w-24 h-24 bg-slate-100 dark:bg-darkmode-400 rounded-full flex items-center justify-center mb-4">
           <Lucide icon="Files" class="w-10 h-10 text-slate-400" />

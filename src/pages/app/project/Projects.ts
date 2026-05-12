@@ -4,7 +4,26 @@ import ApiService from '@/core/services/ApiService'
 import publicEndpoint from '@/constants/publicApi'
 import type { ApiResponse } from '@/core/services/ApiService'
 
+// Types & Constants
 export type ProjectVisibility = 'private' | 'team' | 'public'
+
+const VISIBILITY_CONFIG: Record<ProjectVisibility, { label: string; badge: string }> = {
+  private: {
+    label: 'Private',
+    badge: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+  },
+  team: {
+    label: 'Team',
+    badge: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+  },
+  public: {
+    label: 'Public',
+    badge: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+  }
+}
+
+const DEFAULT_PAGE_SIZE = 10
+const FILTER_DEBOUNCE_MS = 500
 
 export interface Project {
   id: string
@@ -33,17 +52,24 @@ interface ProjectForm {
   workspace_id: string
 }
 
+interface ApiProjectResponse {
+  data: Project[]
+  current_page: number
+  last_page: number
+  total: number
+}
+
+// Composable
 export function useProjects() {
   // State
   const projects = ref<Project[]>([])
   const loading = ref(false)
   const currentPage = ref(1)
-  const perPage = ref(10)
+  const perPage = ref(DEFAULT_PAGE_SIZE)
   const total = ref(0)
   const lastPage = ref(1)
   const filters = ref<ProjectFilters>({ search: '', workspace_id: '', visibility: '' })
   const workspaces = ref<{ id: string; name: string }[]>([])
-
   const showModal = ref(false)
   const editingProject = ref<Project | null>(null)
   const form = ref<ProjectForm>({
@@ -54,53 +80,43 @@ export function useProjects() {
   })
 
   // Helpers
-  const formatDate = (dateStr?: string): string => {
-    if (!dateStr) return ''
-    return new Date(dateStr).toLocaleDateString()
-  }
+  const formatDate = (dateStr?: string): string =>
+    dateStr ? new Date(dateStr).toLocaleDateString() : ''
 
-  const visibilityBadgeClass = (visibility: ProjectVisibility): string => {
-    const classes: Record<ProjectVisibility, string> = {
-      private: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
-      team: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      public: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-    }
-    return classes[visibility]
-  }
+  const visibilityLabel = (visibility: ProjectVisibility): string =>
+    VISIBILITY_CONFIG[visibility].label
 
-  const visibilityLabel = (visibility: ProjectVisibility): string => {
-    const labels: Record<ProjectVisibility, string> = {
-      private: 'Private',
-      team: 'Team',
-      public: 'Public'
+  const visibilityBadgeClass = (visibility: ProjectVisibility): string =>
+    VISIBILITY_CONFIG[visibility].badge
+
+  const buildFilterParams = () => {
+    const params: Record<string, any> = {
+      page: currentPage.value,
+      per_page: perPage.value
     }
-    return labels[visibility]
+    if (filters.value.search) params.search = filters.value.search
+    if (filters.value.workspace_id) params['filter[workspace_id]'] = filters.value.workspace_id
+    if (filters.value.visibility) params['filter[visibility]'] = filters.value.visibility
+    return params
   }
 
   // API Calls
   async function fetchProjects() {
     loading.value = true
     try {
-      const params: any = {
-        page: currentPage.value,
-        per_page: perPage.value
-      }
-      if (filters.value.search) params.search = filters.value.search
-      if (filters.value.workspace_id) params['filter[workspace_id]'] = filters.value.workspace_id
-      if (filters.value.visibility) params['filter[visibility]'] = filters.value.visibility
-
       const response = await ApiService.get({
         resource: publicEndpoint.projects.list,
-        params
-      }) as ApiResponse<{ data: Project[]; current_page: number; last_page: number; total: number }>
+        params: buildFilterParams()
+      }) as ApiResponse<ApiProjectResponse>
 
-      const payload = response.payload
-      projects.value = payload.data || []
-      currentPage.value = payload.current_page
-      lastPage.value = payload.last_page
-      total.value = payload.total
+      const { data, current_page, last_page, total: totalCount } = response.payload
+      projects.value = data || []
+      currentPage.value = current_page
+      lastPage.value = last_page
+      total.value = totalCount
     } catch (error) {
       console.error('Failed to fetch projects:', error)
+      projects.value = []
     } finally {
       loading.value = false
     }
@@ -114,22 +130,18 @@ export function useProjects() {
       workspaces.value = response.payload.data || []
     } catch (error) {
       console.error('Failed to fetch workspaces:', error)
+      workspaces.value = []
     }
   }
 
   async function submitProject() {
     try {
-      if (editingProject.value) {
-        await ApiService.put({
-          resource: publicEndpoint.projects.update.replace(':id', editingProject.value.id),
-          params: form.value
-        })
-      } else {
-        await ApiService.post({
-          resource: publicEndpoint.projects.create,
-          params: form.value
-        })
-      }
+      const endpoint = editingProject.value
+        ? publicEndpoint.projects.update.replace(':id', editingProject.value.id)
+        : publicEndpoint.projects.create
+      const method = editingProject.value ? 'put' : 'post'
+
+      await ApiService[method]({ resource: endpoint, params: form.value })
       closeModal()
       await fetchProjects()
     } catch (error) {
@@ -209,7 +221,7 @@ export function useProjects() {
   const debouncedFiltersHandler = debounce(() => {
     currentPage.value = 1
     fetchProjects()
-  }, 500)
+  }, FILTER_DEBOUNCE_MS)
 
   watch(
     [() => filters.value.search, () => filters.value.workspace_id, () => filters.value.visibility],
@@ -240,7 +252,6 @@ export function useProjects() {
     formatDate,
     visibilityBadgeClass,
     visibilityLabel,
-    fetchProjects,
     submitProject,
     deleteProject,
     restoreProject,

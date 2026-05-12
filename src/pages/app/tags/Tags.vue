@@ -38,7 +38,7 @@
 
     <!-- Tags Grid -->
     <div>
-      <LoadingIcon v-if="loading" class="mx-auto" />
+      <LoadingIcon v-if="loading" icon="puff" class="mx-auto" />
       <div v-else-if="tags.length === 0" class="text-center text-gray-500 py-8">No tags found.</div>
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <div v-for="tag in tags" :key="tag.id" class="bg-white rounded-lg shadow-md p-4 border border-gray-100 hover:shadow-lg transition">

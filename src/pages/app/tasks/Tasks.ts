@@ -4,8 +4,50 @@ import ApiService from '@/core/services/ApiService'
 import publicEndpoint from '@/constants/publicApi'
 import type { ApiResponse } from '@/core/services/ApiService'
 
+// Types & Constants
 export type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'done'
 export type TaskPriority = 'urgent' | 'high' | 'normal' | 'low'
+
+const STATUS_CONFIG: Record<TaskStatus, { label: string; badge: string }> = {
+  todo: {
+    label: 'Todo',
+    badge: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+  },
+  in_progress: {
+    label: 'In Progress',
+    badge: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+  },
+  in_review: {
+    label: 'In Review',
+    badge: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+  },
+  done: {
+    label: 'Done',
+    badge: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+  }
+}
+
+const PRIORITY_CONFIG: Record<TaskPriority, { label: string; badge: string }> = {
+  urgent: {
+    label: 'Urgent',
+    badge: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+  },
+  high: {
+    label: 'High',
+    badge: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+  },
+  normal: {
+    label: 'Normal',
+    badge: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+  },
+  low: {
+    label: 'Low',
+    badge: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+  }
+}
+
+const DEFAULT_PAGE_SIZE = 10
+const FILTER_DEBOUNCE_MS = 500
 
 export interface Task {
   id: string
@@ -34,16 +76,23 @@ interface TaskForm {
   project_id: string
 }
 
+interface ApiTaskResponse {
+  data: Task[]
+  current_page: number
+  last_page: number
+  total: number
+}
+
+// Composable
 export function useTasks() {
   // State
   const tasks = ref<Task[]>([])
   const loading = ref(false)
   const currentPage = ref(1)
-  const perPage = ref(10)
+  const perPage = ref(DEFAULT_PAGE_SIZE)
   const total = ref(0)
   const lastPage = ref(1)
   const filters = ref<TaskFilters>({ search: '', status: '', priority: '' })
-
   const showModal = ref(false)
   const editingTask = ref<Task | null>(null)
   const form = ref<TaskForm>({
@@ -56,75 +105,43 @@ export function useTasks() {
   })
 
   // Helpers
-  const formatStatus = (status: TaskStatus): string => {
-    const map: Record<TaskStatus, string> = {
-      todo: 'Todo',
-      in_progress: 'In Progress',
-      in_review: 'In Review',
-      done: 'Done'
-    }
-    return map[status] || status
-  }
+  const formatStatus = (status: TaskStatus): string => STATUS_CONFIG[status].label
+  const statusBadgeClass = (status: TaskStatus): string => STATUS_CONFIG[status].badge
 
-  const formatPriority = (priority: TaskPriority): string => {
-    const map: Record<TaskPriority, string> = {
-      urgent: 'Urgent',
-      high: 'High',
-      normal: 'Normal',
-      low: 'Low'
-    }
-    return map[priority] || priority
-  }
+  const formatPriority = (priority: TaskPriority): string => PRIORITY_CONFIG[priority].label
+  const priorityBadgeClass = (priority: TaskPriority): string => PRIORITY_CONFIG[priority].badge
 
-  const formatDate = (dateStr?: string): string => {
-    if (!dateStr) return ''
-    return new Date(dateStr).toLocaleDateString()
-  }
+  const formatDate = (dateStr?: string): string =>
+    dateStr ? new Date(dateStr).toLocaleDateString() : ''
 
-  const statusBadgeClass = (status: TaskStatus): string => {
-    const classes: Record<TaskStatus, string> = {
-      todo: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
-      in_progress: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-      in_review: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      done: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+  const buildFilterParams = () => {
+    const params: Record<string, any> = {
+      page: currentPage.value,
+      per_page: perPage.value
     }
-    return classes[status]
-  }
-
-  const priorityBadgeClass = (priority: TaskPriority): string => {
-    const classes: Record<TaskPriority, string> = {
-      urgent: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-      high: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
-      normal: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      low: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-    }
-    return classes[priority]
+    if (filters.value.search) params.search = filters.value.search
+    if (filters.value.status) params['filter[status]'] = filters.value.status
+    if (filters.value.priority) params['filter[priority]'] = filters.value.priority
+    return params
   }
 
   // API Calls
   async function fetchTasks() {
     loading.value = true
     try {
-      const params: any = {
-        page: currentPage.value,
-        per_page: perPage.value
-      }
-      if (filters.value.search) params.search = filters.value.search
-      if (filters.value.status) params['filter[status]'] = filters.value.status
-      if (filters.value.priority) params['filter[priority]'] = filters.value.priority
-
       const response = await ApiService.get({
         resource: publicEndpoint.tasks.list,
-        params
-      }) as ApiResponse<{ data: Task[]; current_page: number; last_page: number; total: number }>
+        params: buildFilterParams()
+      }) as ApiResponse<ApiTaskResponse>
 
-      const payload = response.payload
-      tasks.value = payload.data || []
-      currentPage.value = payload.current_page
-      lastPage.value = payload.last_page
-      total.value = payload.total
+      const { data, current_page, last_page, total: totalCount } = response.payload
+      tasks.value = data || []
+      currentPage.value = current_page
+      lastPage.value = last_page
+      total.value = totalCount
     } catch (error) {
       console.error('Failed to fetch tasks:', error)
+      tasks.value = []
     } finally {
       loading.value = false
     }
@@ -156,17 +173,12 @@ export function useTasks() {
 
   async function submitTask() {
     try {
-      if (editingTask.value) {
-        await ApiService.put({
-          resource: publicEndpoint.tasks.update.replace(':id', editingTask.value.id),
-          params: form.value
-        })
-      } else {
-        await ApiService.post({
-          resource: publicEndpoint.tasks.create,
-          params: form.value
-        })
-      }
+      const endpoint = editingTask.value
+        ? publicEndpoint.tasks.update.replace(':id', editingTask.value.id)
+        : publicEndpoint.tasks.create
+      const method = editingTask.value ? 'put' : 'post'
+
+      await ApiService[method]({ resource: endpoint, params: form.value })
       closeModal()
       await fetchTasks()
     } catch (error) {
@@ -232,7 +244,7 @@ export function useTasks() {
   const debouncedFiltersHandler = debounce(() => {
     currentPage.value = 1
     fetchTasks()
-  }, 500)
+  }, FILTER_DEBOUNCE_MS)
 
   watch(
     [() => filters.value.search, () => filters.value.status, () => filters.value.priority],
@@ -259,10 +271,10 @@ export function useTasks() {
     editingTask,
     form,
     formatStatus,
-    formatPriority,
-    formatDate,
     statusBadgeClass,
+    formatPriority,
     priorityBadgeClass,
+    formatDate,
     toggleComplete,
     deleteTask,
     submitTask,

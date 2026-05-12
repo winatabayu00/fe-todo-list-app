@@ -41,7 +41,7 @@
         <h3 class="font-medium text-gray-900">Time Log History</h3>
       </div>
       <div>
-        <LoadingIcon v-if="loading" class="mx-auto py-8" />
+        <LoadingIcon v-if="loading" icon="puff" class="mx-auto py-8" />
         <div v-else-if="timeLogs.length === 0" class="text-center text-gray-500 py-8">
           No time logs yet.
         </div>
