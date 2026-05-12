@@ -262,7 +262,7 @@ onMounted(() => {
         class="md:max-w-auto min-h-screen min-w-0 max-w-full flex-1 rounded-[30px] bg-slate-100 px-4 pb-10 before:block before:h-px before:w-full before:content-[''] dark:bg-darkmode-700 md:px-[22px]"
       >
         <TopBar />
-        <RouterView />
+        <RouterView :key="$route.fullPath" />
       </div>
       <!-- END: Content -->
     </div>

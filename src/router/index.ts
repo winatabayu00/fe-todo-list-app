@@ -57,7 +57,7 @@ router.beforeEach((to, from, next) => {
   next()
 })
 
-router.afterEach((to, from, next) => {
+router.afterEach((to, from) => {
   const APP_TITLE = import.meta.env.VITE_APP_NAME
   document.title = to.meta.pageTitle
     ? `${to.meta.pageTitle} - ${APP_TITLE}`

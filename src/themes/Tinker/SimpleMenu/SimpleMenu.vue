@@ -259,7 +259,7 @@ onMounted(() => {
         ]"
       >
         <TopBar />
-        <RouterView />
+        <RouterView :key="$route.fullPath" />
       </div>
       <!-- END: Content -->
     </div>

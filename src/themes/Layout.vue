@@ -26,6 +26,6 @@ onMounted(() => {
 <template>
   <div>
 <!--    <ThemeSwitcher />-->
-    <Component />
+    <Component :key="$route.fullPath" />
   </div>
 </template>

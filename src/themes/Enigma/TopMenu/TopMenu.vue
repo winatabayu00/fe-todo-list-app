@@ -185,7 +185,7 @@ onMounted(() => {
         'before:content-[\'\'] before:w-full before:h-px before:block',
       ]"
     >
-      <RouterView />
+      <RouterView :key="$route.fullPath" />
     </div>
     <!-- END: Content -->
   </div>
