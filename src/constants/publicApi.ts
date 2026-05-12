@@ -41,7 +41,7 @@ const publicEndpoint = {
     update: `${BASE_URL}/app/subtasks/:id/update`,
     delete: `${BASE_URL}/app/subtasks/:id/delete`,
     restore: `${BASE_URL}/app/subtasks/:id/restore`,
-    toggle: `${BASE_URL}/app/tasks/:taskId/subtasks/:subtaskId/toggle`,
+    toggle: `${BASE_URL}/app/subtasks/:id/toggle`,
   },
   tags: {
     list: `${BASE_URL}/app/tags`,

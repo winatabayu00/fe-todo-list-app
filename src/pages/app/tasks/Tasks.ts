@@ -225,23 +225,22 @@ export function useTasks() {
     }
   }
 
-  async function toggleSubtask(parentTaskId: string, subtask: Subtask) {
-    const prevValue = subtask.is_completed
-    // Optimistic update
-    subtask.is_completed = !subtask.is_completed
-    try {
-      await ApiService.put({
-        resource: publicEndpoint.subtasks.toggle
-            .replace(':taskId', parentTaskId)
-            .replace(':subtaskId', subtask.id),
-        params: { is_completed: subtask.is_completed }
-      })
-    } catch (error) {
-      // Rollback
-      subtask.is_completed = prevValue
-      console.error('Failed to toggle subtask', error)
-    }
-  }
+   async function toggleSubtask(parentTaskId: string, subtask: Subtask) {
+     const prevValue = subtask.is_completed
+     // Optimistic update
+     subtask.is_completed = !subtask.is_completed
+     try {
+       await ApiService.patch({
+         resource: publicEndpoint.subtasks.toggle.replace(':id', subtask.id),
+         params: { is_completed: subtask.is_completed }
+       })
+     } catch (error: any) {
+       // Rollback
+       subtask.is_completed = prevValue
+       const message = error?.message || error?.response?.data?.message || 'Failed to toggle subtask'
+       console.error('Failed to toggle subtask:', message)
+     }
+   }
 
   // ── Modal / navigation ───────────────────────────────────────────────────────
 

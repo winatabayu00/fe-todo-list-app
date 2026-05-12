@@ -282,20 +282,20 @@
 
                 <!-- Log list -->
                 <div class="space-y-1 mb-3">
-                  <div
-                      v-for="log in validTimeLogs"
-                      :key="log.id"
-                      class="flex items-center gap-3 text-sm px-3 py-2 rounded-lg bg-slate-50 dark:bg-darkmode-700"
-                  >
-                    <svg class="w-4 h-4 text-violet-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                    </svg>
-                    <span class="font-semibold text-slate-700 dark:text-slate-300 flex-shrink-0">{{ log.minutes }} min</span>
-                    <span class="flex-1 text-slate-500 truncate">{{ log.description || '—' }}</span>
-                    <span class="text-xs text-slate-400 flex-shrink-0">{{ taskHelpers.formatDateTime(log.created_at) }}</span>
-                  </div>
-                  <p v-if="!validTimeLogs.length" class="text-sm text-slate-400 italic px-3 py-2">No time logs yet.</p>
-                </div>
+                   <div
+                       v-for="log in validTimeLogs"
+                       :key="log.id"
+                       class="flex items-center gap-3 text-sm px-3 py-2 rounded-lg bg-slate-50 dark:bg-darkmode-700"
+                   >
+                     <svg class="w-4 h-4 text-violet-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                       <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                     </svg>
+                     <span class="font-semibold text-slate-700 dark:text-slate-300 flex-shrink-0">{{ log.minutes }} min</span>
+                     <span class="flex-1 text-slate-500 truncate">{{ log.description || '—' }}</span>
+                     <span class="text-xs text-slate-400 flex-shrink-0">{{ taskHelpers.formatDateTime(log.created_at) }}</span>
+                   </div>
+                   <p v-if="!validTimeLogs.length" class="text-sm text-slate-400 italic px-3 py-2">No time logs yet.</p>
+                 </div>
 
                 <!-- Add log -->
                 <div class="flex items-center gap-2">
@@ -524,7 +524,7 @@ const form = ref({
 // ── Time logs (declare BEFORE watch that uses it) ─────────────────────────────
 
 const timeLogs = ref<{ id: string; minutes: number; description: string; created_at: string }[]>([])
-const validTimeLogs = computed(() => timeLogs.value.filter(Boolean))
+const validTimeLogs = computed(() => timeLogs.value.filter(log => log && log.id && log.minutes !== null && log.minutes !== undefined))
 const logMinutes    = ref<number>(30)
 const logDescription = ref('')
 
@@ -596,18 +596,19 @@ async function handleToggleSubtask(st: Subtask) {
 // ── Time logs functions ───────────────────────────────────────────────────────
 
 async function fetchTimeLogs() {
-  const id = props.detailStack[props.detailStack.length - 1]
-  if (!id) { timeLogs.value = []; return }
-  try {
-    const res = await ApiService.get({
-      resource: publicEndpoint.timeTracking.logs.replace(':taskId', id)
-    }) as ApiResponse<any>
-    const raw = res.payload
-    const list = Array.isArray(raw) ? raw : (raw?.data ?? [])
-    timeLogs.value = list.filter(Boolean)
-  } catch {
-    timeLogs.value = []
-  }
+   const id = props.detailStack[props.detailStack.length - 1]
+   if (!id) { timeLogs.value = []; return }
+   try {
+     const res = await ApiService.get({
+       resource: publicEndpoint.timeTracking.logs.replace(':taskId', id)
+     }) as ApiResponse<any>
+     const payload = res.payload || {}
+     const list = payload.data && Array.isArray(payload.data) ? payload.data :
+                  Array.isArray(payload) ? payload : []
+     timeLogs.value = list.filter((log: any) => log && log.id && log.minutes !== undefined)
+   } catch {
+     timeLogs.value = []
+   }
 }
 
 async function handleAddTimeLog() {
