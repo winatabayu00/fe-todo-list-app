@@ -1,0 +1,70 @@
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+
+const publicEndpoint = {
+  auth: {
+    login: `${BASE_URL}/auth/login`,
+    register: `${BASE_URL}/auth/register`,
+    logout: `${BASE_URL}/auth/logout`,
+    me: `${BASE_URL}/auth/me`,
+  },
+  workspaces: {
+    list: `${BASE_URL}/app/workspaces`,
+    create: `${BASE_URL}/app/workspaces/create`,
+    detail: `${BASE_URL}/app/workspaces/:id/detail`,
+    update: `${BASE_URL}/app/workspaces/:id/update`,
+    delete: `${BASE_URL}/app/workspaces/:id/delete`,
+    restore: `${BASE_URL}/app/workspaces/:id/restore`,
+    members: `${BASE_URL}/app/workspaces/:id/members`,
+    memberRemove: `${BASE_URL}/app/workspaces/:id/members/:userId`,
+  },
+  projects: {
+    list: `${BASE_URL}/app/projects`,
+    create: `${BASE_URL}/app/projects/create`,
+    detail: `${BASE_URL}/app/projects/:id/detail`,
+    update: `${BASE_URL}/app/projects/:id/update`,
+    delete: `${BASE_URL}/app/projects/:id/delete`,
+    restore: `${BASE_URL}/app/projects/:id/restore`,
+  },
+  tasks: {
+    list: `${BASE_URL}/app/tasks`,
+    create: `${BASE_URL}/app/tasks/create`,
+    detail: `${BASE_URL}/app/tasks/:id/detail`,
+    update: `${BASE_URL}/app/tasks/:id/update`,
+    delete: `${BASE_URL}/app/tasks/:id/delete`,
+    restore: `${BASE_URL}/app/tasks/:id/restore`,
+  },
+  subtasks: {
+    list: `${BASE_URL}/app/subtasks`,
+    create: `${BASE_URL}/app/subtasks/create`,
+    detail: `${BASE_URL}/app/subtasks/:id/detail`,
+    update: `${BASE_URL}/app/subtasks/:id/update`,
+    delete: `${BASE_URL}/app/subtasks/:id/delete`,
+    restore: `${BASE_URL}/app/subtasks/:id/restore`,
+    toggle: `${BASE_URL}/app/subtasks/:id/toggle`,
+  },
+  tags: {
+    list: `${BASE_URL}/app/tags`,
+    create: `${BASE_URL}/app/tags/create`,
+    detail: `${BASE_URL}/app/tags/:id/detail`,
+    update: `${BASE_URL}/app/tags/:id/update`,
+    delete: `${BASE_URL}/app/tags/:id/delete`,
+    restore: `${BASE_URL}/app/tags/:id/restore`,
+  },
+  timeTracking: {
+    log: `${BASE_URL}/app/tasks/:taskId/time/log`,
+    logs: `${BASE_URL}/app/tasks/:taskId/time/logs`,
+    total: `${BASE_URL}/app/tasks/:taskId/time/total`,
+    estimate: `${BASE_URL}/app/tasks/:taskId/time/estimate`,
+  },
+  dashboard: {
+    stats: `${BASE_URL}/app/dashboard/stats`,
+    upcomingTasks: `${BASE_URL}/app/dashboard/upcoming-tasks`,
+    overdueTasks: `${BASE_URL}/app/dashboard/overdue-tasks`,
+    recentTasks: `${BASE_URL}/app/dashboard/recent-tasks`,
+    myTasks: `${BASE_URL}/app/dashboard/my-tasks`,
+    workspaceSummary: `${BASE_URL}/app/dashboard/workspace/:workspaceId/summary`,
+    overallSummary: `${BASE_URL}/app/dashboard/overall-summary`,
+  },
+}
+
+export default publicEndpoint
